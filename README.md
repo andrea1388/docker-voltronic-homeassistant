@@ -58,7 +58,9 @@ vi config/mqtt.json
 Then, plug in your Serial or USB cable to the Inverter & stand up the container:
 
 ```bash
-docker-compose up -d
+docker build -f dockerfile.ubuntu18.04.yml -t inverter .
+docker run -d --name="inverter" -e "TZ=Europe/Rome" -v /root/inverterconf/:/etc/inverter/ --net=host --restart=always inverter:latest
+
 
 ```
 
