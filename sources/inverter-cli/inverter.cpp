@@ -112,12 +112,16 @@ bool cInverter::query(const char *cmd, int replysize) {
     buf[n++] = 0x0d;
 
     //send a command
+    char c;
+    while(read(fd,(void *)&c,1)>=1); // empty buffer
     write(fd, &buf, n);
     time(&started);
+    //lprintf("query.cmd=%s\n",cmd);
 
+    replysize=0;
     do {
-        n = read(fd, (void*)buf+i, replysize-i);
-        if (n < 0) {
+        n = read(fd, (void *)&c, 1);
+	if (n < 0) {
             if (time(NULL) - started > 2) {
                 lprintf("INVERTER: %s read timeout", cmd);
                 break;
@@ -126,16 +130,19 @@ bool cInverter::query(const char *cmd, int replysize) {
                 continue;
             }
         }
-
-        i += n;
-    } while (i<replysize);
+	buf[replysize]=c;
+        replysize++;
+	if(replysize>=1023) {replysize=0;break;}	
+	//printf("rs=%d,c=%x\n",replysize,c);
+	if(c==0x0a) break;
+    } while (true);
     close(fd);
+    buf[replysize]=0;
+    if (replysize>3) {
 
-    if (i==replysize) {
+        lprintf("INVERTER: %s reply size (%d bytes)", cmd, replysize);
 
-        lprintf("INVERTER: %s reply size (%d bytes)", cmd, i);
-
-        if (buf[0]!='(' || buf[replysize-1]!=0x0d) {
+        if (buf[0]!='(' || buf[replysize-1]!=0x0a) {
             lprintf("INVERTER: %s: incorrect start/stop bytes.  Buffer: %s", cmd, buf);
             return false;
         }

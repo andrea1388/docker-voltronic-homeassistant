@@ -16,6 +16,7 @@ pushMQTTData () {
         -P "$MQTT_PASSWORD" \
         -t "$MQTT_TOPIC/sensor/"$MQTT_DEVICENAME"_$1" \
         -m "$2"
+    echo "$2"
 }
 
 INVERTER_DATA=`timeout 10 /opt/inverter-cli/bin/inverter_poller -1`
